@@ -152,8 +152,13 @@ são sempre ignorados, independente de configuração.
 
 `pruneFilteredDepartments()` apaga departamentos que passaram a ser filtrados,
 mas **só os que não têm registro vinculado** — filtro errado nunca derruba
-histórico. Usuário que já existe e passa a ser filtrado não é removido nem
-desativado: o sync só decide o que entra. Desative pela tela de Usuários.
+histórico.
+
+`deactivateFilteredUsers()` desativa (nunca apaga) contas já cadastradas que
+passaram a bater no denylist — sem isso o filtro valeria só para inserção e a
+conta antiga continuaria entrando por OIDC. `MASTER_USER_EMAIL` é sempre
+poupado. Ausência no diretório **não** desativa ninguém: só o denylist explícito
+conta, para uma resposta parcial da API não virar desativação em massa.
 
 ## Banco (Prisma)
 

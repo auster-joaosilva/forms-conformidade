@@ -30,6 +30,7 @@ export type DirectorySyncResult = {
   skippedGroups: number
   skippedUsers: number
   removedDepartments: number
+  deactivatedUsers: number
 }
 
 function requireSyncConfig() {
@@ -174,6 +175,33 @@ async function pruneFilteredDepartments() {
   return count
 }
 
+// Desativa (nunca apaga) contas que passaram a ser filtradas: sem isso o
+// denylist só impediria a inserção e a conta antiga continuaria logando.
+// Só considera o denylist explícito -- ausência no diretório não desativa
+// ninguém, para uma resposta parcial da API nunca virar desativação em massa.
+async function deactivateFilteredUsers() {
+  if (env.AUTHENTIK_USER_DENYLIST.length === 0) return 0
+
+  const candidates = await prisma.user.findMany({
+    where: { active: true, authentikId: { not: null } },
+    select: { id: true, email: true },
+  })
+
+  const masterEmail = env.MASTER_USER_EMAIL?.toLowerCase()
+  const filtered = candidates.filter(
+    (user) =>
+      user.email !== masterEmail &&
+      matchesAnyPattern(user.email, env.AUTHENTIK_USER_DENYLIST),
+  )
+  if (filtered.length === 0) return 0
+
+  const { count } = await prisma.user.updateMany({
+    where: { id: { in: filtered.map((user) => user.id) } },
+    data: { active: false },
+  })
+  return count
+}
+
 export async function syncDirectory(): Promise<DirectorySyncResult> {
   requireSyncConfig()
 
@@ -191,12 +219,15 @@ export async function syncDirectory(): Promise<DirectorySyncResult> {
     await upsertUser(user)
   }
 
+  const deactivatedUsers = await deactivateFilteredUsers()
+
   return {
     departments: groups.length,
     users: users.length,
     skippedGroups: allGroups.length - groups.length,
     skippedUsers: allUsers.length - users.length,
     removedDepartments,
+    deactivatedUsers,
   }
 }
 

@@ -78,6 +78,9 @@ function DirectoryPage() {
               result.removedDepartments > 0
                 ? `${result.removedDepartments} departamento(s) sem registros removido(s).`
                 : '',
+              result.deactivatedUsers > 0
+                ? `${result.deactivatedUsers} usuário(s) filtrado(s) desativado(s).`
+                : '',
             ]
               .filter(Boolean)
               .join(' '),
