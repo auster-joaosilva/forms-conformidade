@@ -1,6 +1,11 @@
 #!/bin/sh
 set -e
 
+if [ -z "${DATABASE_URL}" ]; then
+  echo "DATABASE_URL nao definida: confira POSTGRES_USER/PASSWORD/HOST/DB no ambiente do servico"
+  exit 1
+fi
+
 echo "Applying database migrations..."
 npx prisma migrate deploy
 

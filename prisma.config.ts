@@ -1,4 +1,4 @@
-import { defineConfig, env } from 'prisma/config'
+import { defineConfig } from 'prisma/config'
 
 export default defineConfig({
   schema: './prisma/schema.prisma',
@@ -7,6 +7,9 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    // ponytail: `prisma generate` roda sem banco (build da imagem), então a URL
+    // é opcional aqui. Quem exige conexão (migrate, studio, seed) valida no
+    // docker-entrypoint.sh ou no src/config/env.ts.
+    url: process.env.DATABASE_URL ?? '',
   },
 })

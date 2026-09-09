@@ -148,6 +148,10 @@ Toda regra nova de permissão entra no servidor primeiro; a UI só reflete.
   `additionalFields` com `input: false`.
 - Numeração do RACP: `NNN/AAAA`, `max(sequence)+1` por ano protegido pelo índice
   único `@@unique([year, sequence])` com retry em `P2002`.
+- `prisma.config.ts` lê `process.env.DATABASE_URL ?? ''`, **não** o helper
+  `env()` do Prisma: `env()` lança exceção quando a variável falta e isso quebra
+  o `prisma generate` no build da imagem, que não tem (nem deve ter) a URL. Quem
+  precisa de conexão valida antes: `docker-entrypoint.sh` e `src/config/env.ts`.
 - Sem banco à mão, gere migração com
   `prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script -o prisma/migrations/<n>_<nome>/migration.sql`.
   (`--to-schema-datamodel` foi removido no Prisma 7.)
