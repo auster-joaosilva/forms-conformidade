@@ -1,5 +1,6 @@
 import { env, isAuthentikSyncEnabled } from '@/config/env'
 import { prisma } from '@/lib/prisma'
+import { matchesAnyPattern } from '@/utils/pattern'
 
 type AuthentikGroup = {
   pk: string
@@ -26,6 +27,9 @@ type AuthentikPage<T> = {
 export type DirectorySyncResult = {
   departments: number
   users: number
+  skippedGroups: number
+  skippedUsers: number
+  removedDepartments: number
 }
 
 function requireSyncConfig() {
@@ -79,8 +83,17 @@ async function fetchPages<T>(
   return items
 }
 
+function isDepartmentGroup(name: string) {
+  if (env.AUTHENTIK_GROUP_ALLOWLIST.length > 0) {
+    return matchesAnyPattern(name, env.AUTHENTIK_GROUP_ALLOWLIST)
+  }
+  return !matchesAnyPattern(name, env.AUTHENTIK_GROUP_DENYLIST)
+}
+
 function isDirectoryUser(user: AuthentikUser) {
-  return Boolean(user.email) && !user.type.includes('service_account')
+  if (!user.email) return false
+  if (user.type.includes('service_account')) return false
+  return !matchesAnyPattern(user.email, env.AUTHENTIK_USER_DENYLIST)
 }
 
 function positionOf(user: AuthentikUser) {
@@ -89,7 +102,7 @@ function positionOf(user: AuthentikUser) {
 }
 
 async function upsertDepartments(groups: Array<AuthentikGroup>) {
-  for (const group of groups) {
+  for (const group of groups.filter((group) => isDepartmentGroup(group.name))) {
     await prisma.department.upsert({
       where: { authentikGroupId: group.pk },
       create: { name: group.name, authentikGroupId: group.pk },
@@ -143,21 +156,48 @@ async function upsertUser(user: AuthentikUser) {
   return stored
 }
 
+// Remove departamentos que passaram a ser filtrados. Só apaga os que nao tem
+// registro vinculado, para nunca derrubar histórico por causa de um filtro errado.
+async function pruneFilteredDepartments() {
+  const candidates = await prisma.department.findMany({
+    where: { records: { none: {} } },
+    select: { id: true, name: true },
+  })
+  const stale = candidates.filter(
+    (department) => !isDepartmentGroup(department.name),
+  )
+  if (stale.length === 0) return 0
+
+  const { count } = await prisma.department.deleteMany({
+    where: { id: { in: stale.map((department) => department.id) } },
+  })
+  return count
+}
+
 export async function syncDirectory(): Promise<DirectorySyncResult> {
   requireSyncConfig()
 
-  const groups = await fetchPages<AuthentikGroup>('/core/groups/')
+  const allGroups = await fetchPages<AuthentikGroup>('/core/groups/')
+  const groups = allGroups.filter((group) => isDepartmentGroup(group.name))
   await upsertDepartments(groups)
+  const removedDepartments = await pruneFilteredDepartments()
 
-  const users = (
-    await fetchPages<AuthentikUser>('/core/users/', { include_groups: 'true' })
-  ).filter(isDirectoryUser)
+  const allUsers = await fetchPages<AuthentikUser>('/core/users/', {
+    include_groups: 'true',
+  })
+  const users = allUsers.filter(isDirectoryUser)
 
   for (const user of users) {
     await upsertUser(user)
   }
 
-  return { departments: groups.length, users: users.length }
+  return {
+    departments: groups.length,
+    users: users.length,
+    skippedGroups: allGroups.length - groups.length,
+    skippedUsers: allUsers.length - users.length,
+    removedDepartments,
+  }
 }
 
 export async function syncUserByEmail(email: string) {

@@ -136,6 +136,25 @@ Toda regra nova de permissão entra no servidor primeiro; a UI só reflete.
   `x-bootstrap-token` igual ao `BETTER_AUTH_SECRET`, comparado com
   `timingSafeEqual`). O entrypoint do container chama isso no start.
 
+### Filtros do sync
+
+Três variáveis, listas separadas por vírgula, `*` como curinga, comparação sem
+case (`src/utils/pattern.ts`, com teste em `pattern.test.ts`):
+
+| Variável | Efeito |
+| --- | --- |
+| `AUTHENTIK_GROUP_ALLOWLIST` | se preenchida, **só** esses grupos viram departamento |
+| `AUTHENTIK_GROUP_DENYLIST` | usada quando o allowlist está vazio; padrão `authentik *` |
+| `AUTHENTIK_USER_DENYLIST` | e-mails a ignorar (ex.: `*@fornecedor.com.br`) |
+
+Allowlist tem precedência sobre denylist. Service accounts e usuários sem e-mail
+são sempre ignorados, independente de configuração.
+
+`pruneFilteredDepartments()` apaga departamentos que passaram a ser filtrados,
+mas **só os que não têm registro vinculado** — filtro errado nunca derruba
+histórico. Usuário que já existe e passa a ser filtrado não é removido nem
+desativado: o sync só decide o que entra. Desative pela tela de Usuários.
+
 ## Banco (Prisma)
 
 - Generator `prisma-client` com saída em `src/generated/prisma` — **gitignored**,

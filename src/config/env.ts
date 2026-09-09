@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+import { parsePatternList } from '@/utils/pattern'
+
+const patternList = (defaultValue = '') =>
+  z.string().default(defaultValue).transform(parsePatternList)
+
 const schema = z.object({
   DATABASE_URL: z.string().min(1),
   APP_URL: z.string().min(1).default('http://localhost:3000'),
@@ -9,6 +14,9 @@ const schema = z.object({
   AUTHENTIK_CLIENT_ID: z.string().optional(),
   AUTHENTIK_CLIENT_SECRET: z.string().optional(),
   AUTHENTIK_API_TOKEN: z.string().optional(),
+  AUTHENTIK_GROUP_ALLOWLIST: patternList(),
+  AUTHENTIK_GROUP_DENYLIST: patternList('authentik *'),
+  AUTHENTIK_USER_DENYLIST: patternList(),
   MASTER_USER_EMAIL: z.string().optional(),
   MASTER_USER_PASSWORD: z.string().optional(),
   MASTER_USER_NAME: z.string().default('Administrador'),

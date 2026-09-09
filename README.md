@@ -111,6 +111,23 @@ Sincronização:
 As permissões da aplicação (admin/gestor/colaborador) **não** são sobrescritas
 pela sincronização — só o `MASTER_USER_EMAIL` é forçado para admin.
 
+### Filtrando o que entra
+
+Nem todo grupo do Authentik é um departamento (`authentik Admins`, grupos de
+service account) e nem todo usuário deve entrar no app. Três variáveis,
+separadas por vírgula, aceitando `*` como curinga:
+
+- `AUTHENTIK_GROUP_ALLOWLIST` — se preenchida, só esses grupos viram
+  departamento. Ex.: `Fiscal,Contábil,Departamento Pessoal,TI`
+- `AUTHENTIK_GROUP_DENYLIST` — usada quando o allowlist está vazio.
+  Padrão: `authentik *`
+- `AUTHENTIK_USER_DENYLIST` — e-mails a ignorar. Ex.: `*@fornecedor.com.br`
+
+Service accounts e usuários sem e-mail são sempre ignorados. Departamento que
+passa a ser filtrado é removido no sync seguinte **se não tiver registros**;
+com registros, permanece. Usuário já cadastrado que passa a ser filtrado não é
+apagado — desative pela tela de Usuários.
+
 ## Deploy no Dokploy
 
 O `docker-compose.yml` segue o padrão dos outros serviços (`crm.auster.local`,

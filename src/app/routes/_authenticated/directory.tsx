@@ -65,8 +65,23 @@ function DirectoryPage() {
   const sync = useMutation(
     trpc.directory.sync.mutationOptions({
       onSuccess: (result) => {
+        const ignored = [
+          result.skippedUsers > 0 ? `${result.skippedUsers} usuário(s)` : '',
+          result.skippedGroups > 0 ? `${result.skippedGroups} grupo(s)` : '',
+        ].filter(Boolean)
+
         toast.success(
           `Sincronizado: ${result.users} usuários e ${result.departments} departamentos`,
+          {
+            description: [
+              ignored.length > 0 ? `Filtrados: ${ignored.join(' e ')}.` : '',
+              result.removedDepartments > 0
+                ? `${result.removedDepartments} departamento(s) sem registros removido(s).`
+                : '',
+            ]
+              .filter(Boolean)
+              .join(' '),
+          },
         )
         void invalidate()
       },
