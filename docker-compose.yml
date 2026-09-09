@@ -1,0 +1,35 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: forms-conformidade
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-postgres}:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-forms_conformidade}
+      - APP_URL=${APP_URL}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - AUTH_MODE=${AUTH_MODE:-authentik}
+      - AUTHENTIK_ISSUER_URL=${AUTHENTIK_ISSUER_URL}
+      - AUTHENTIK_CLIENT_ID=${AUTHENTIK_CLIENT_ID}
+      - AUTHENTIK_CLIENT_SECRET=${AUTHENTIK_CLIENT_SECRET}
+      - AUTHENTIK_API_TOKEN=${AUTHENTIK_API_TOKEN}
+      - MASTER_USER_EMAIL=${MASTER_USER_EMAIL}
+      - MASTER_USER_PASSWORD=${MASTER_USER_PASSWORD}
+      - MASTER_USER_NAME=${MASTER_USER_NAME:-Administrador}
+      - MAX_UPLOAD_BYTES=${MAX_UPLOAD_BYTES:-10485760}
+      - BOOTSTRAP_ON_START=${BOOTSTRAP_ON_START:-true}
+      - TZ=${TZ:-America/Sao_Paulo}
+      - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED:-0}
+    dns:
+      - ${INTERNAL_DNS:-10.10.30.242}
+    networks:
+      - shared-postgres
+      - dokploy-network
+      - default
+
+networks:
+  shared-postgres:
+    external: true
+  dokploy-network:
+    external: true

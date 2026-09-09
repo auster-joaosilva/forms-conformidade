@@ -1,0 +1,13 @@
+node_modules
+dist
+.git
+.github
+.omc
+.tanstack
+.vscode
+.env
+.env.*
+*.local
+*.log
+*.docx
+README.md
