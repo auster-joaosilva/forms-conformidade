@@ -1,7 +1,9 @@
 # shadcn instructions
 
-Use the latest version of Shadcn to install new components, like this command to add a button component:
+Add components with the shadcn CLI (this project uses npm):
 
 ```bash
-pnpm dlx shadcn@latest add button
+npx shadcn@latest add button
 ```
+
+Keep the `@/` alias in components.json — the CLI fails with the `#/` alias.
