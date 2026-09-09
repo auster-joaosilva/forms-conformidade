@@ -17,6 +17,7 @@ const schema = z.object({
   AUTHENTIK_GROUP_ALLOWLIST: patternList(),
   AUTHENTIK_GROUP_DENYLIST: patternList('authentik *'),
   AUTHENTIK_USER_DENYLIST: patternList(),
+  AUTHENTIK_DEPARTMENT_ATTRIBUTE: z.string().default('department'),
   MASTER_USER_EMAIL: z.string().optional(),
   MASTER_USER_PASSWORD: z.string().optional(),
   MASTER_USER_NAME: z.string().default('Administrador'),

@@ -31,6 +31,8 @@ export type DirectorySyncResult = {
   skippedUsers: number
   removedDepartments: number
   deactivatedUsers: number
+  usersFromAttribute: number
+  usersFromGroups: number
 }
 
 function requireSyncConfig() {
@@ -97,6 +99,31 @@ function isDirectoryUser(user: AuthentikUser) {
   return !matchesAnyPattern(user.email, env.AUTHENTIK_USER_DENYLIST)
 }
 
+// Grupo de AD é grupo de acesso: uma pessoa costuma estar em vários e nenhum
+// deles é "o departamento". Quando o AD traz o campo proprio (attributes.department),
+// ele manda; os grupos ficam só como fallback.
+function departmentNamesFromAttribute(user: AuthentikUser): Array<string> {
+  const raw = user.attributes?.[env.AUTHENTIK_DEPARTMENT_ATTRIBUTE]
+  const values = Array.isArray(raw) ? raw : [raw]
+  return values.filter(
+    (value): value is string => typeof value === 'string' && value.trim() !== '',
+  )
+}
+
+async function ensureDepartmentsByName(names: Array<string>) {
+  const ids: Array<string> = []
+  for (const name of names) {
+    const department = await prisma.department.upsert({
+      where: { name },
+      create: { name },
+      update: {},
+      select: { id: true },
+    })
+    ids.push(department.id)
+  }
+  return ids
+}
+
 function positionOf(user: AuthentikUser) {
   const title = user.attributes?.title ?? user.attributes?.position
   return typeof title === 'string' && title.length > 0 ? title : null
@@ -138,23 +165,33 @@ async function upsertUser(user: AuthentikUser) {
     },
   })
 
-  const groupIds = (user.groups_obj ?? []).map((group) => group.pk)
-  const departments = await prisma.department.findMany({
-    where: { authentikGroupId: { in: groupIds } },
-    select: { id: true },
-  })
+  const fromAttribute = departmentNamesFromAttribute(user)
+    .map((name) => name.trim())
+    .filter(isDepartmentGroup)
+
+  let departmentIds: Array<string>
+  if (fromAttribute.length > 0) {
+    departmentIds = await ensureDepartmentsByName(fromAttribute)
+  } else {
+    const groupIds = (user.groups_obj ?? []).map((group) => group.pk)
+    const departments = await prisma.department.findMany({
+      where: { authentikGroupId: { in: groupIds } },
+      select: { id: true },
+    })
+    departmentIds = departments.map((department) => department.id)
+  }
 
   await prisma.$transaction([
     prisma.departmentMember.deleteMany({ where: { userId: stored.id } }),
     prisma.departmentMember.createMany({
-      data: departments.map((department) => ({
+      data: departmentIds.map((departmentId) => ({
         userId: stored.id,
-        departmentId: department.id,
+        departmentId,
       })),
     }),
   ])
 
-  return stored
+  return { user: stored, usedAttribute: fromAttribute.length > 0 }
 }
 
 // Remove departamentos que passaram a ser filtrados. Só apaga os que nao tem
@@ -215,8 +252,10 @@ export async function syncDirectory(): Promise<DirectorySyncResult> {
   })
   const users = allUsers.filter(isDirectoryUser)
 
+  let usersFromAttribute = 0
   for (const user of users) {
-    await upsertUser(user)
+    const { usedAttribute } = await upsertUser(user)
+    if (usedAttribute) usersFromAttribute += 1
   }
 
   const deactivatedUsers = await deactivateFilteredUsers()
@@ -228,6 +267,8 @@ export async function syncDirectory(): Promise<DirectorySyncResult> {
     skippedUsers: allUsers.length - users.length,
     removedDepartments,
     deactivatedUsers,
+    usersFromAttribute,
+    usersFromGroups: users.length - usersFromAttribute,
   }
 }
 

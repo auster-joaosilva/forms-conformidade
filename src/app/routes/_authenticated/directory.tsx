@@ -81,6 +81,7 @@ function DirectoryPage() {
               result.deactivatedUsers > 0
                 ? `${result.deactivatedUsers} usuário(s) filtrado(s) desativado(s).`
                 : '',
+              `Departamento pelo atributo do AD: ${result.usersFromAttribute}; pelos grupos: ${result.usersFromGroups}.`,
             ]
               .filter(Boolean)
               .join(' '),
@@ -162,7 +163,8 @@ function DirectoryPage() {
             Departamentos ({departments.data?.length ?? 0})
           </CardTitle>
           <CardDescription>
-            Espelham os grupos do Authentik.
+            Vêm do atributo de departamento do AD quando ele existe; senão, dos
+            grupos do Authentik.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">

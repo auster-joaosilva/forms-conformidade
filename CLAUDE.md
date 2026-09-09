@@ -136,6 +136,24 @@ Toda regra nova de permissão entra no servidor primeiro; a UI só reflete.
   `x-bootstrap-token` igual ao `BETTER_AUTH_SECRET`, comparado com
   `timingSafeEqual`). O entrypoint do container chama isso no start.
 
+### Origem do departamento
+
+Grupo de AD é grupo de **acesso**: uma pessoa está em vários (`AcessoDominio`,
+`Fiscal`, `Reforma Tributária`, `RDS-Portaria`…) e nenhum deles é "o
+departamento". Por isso o sync resolve nesta ordem:
+
+1. `attributes[AUTHENTIK_DEPARTMENT_ATTRIBUTE]` (padrão `department`) — o campo
+   próprio do AD. Presente, ele manda e é a única fonte.
+2. Fallback: os grupos do usuário que passarem pelo filtro.
+
+Departamento vindo do atributo é criado por nome (`ensureDepartmentsByName`),
+sem `authentikGroupId`, e respeita o mesmo allow/denylist. Se os nomes no
+atributo do AD não forem os mesmos dos grupos, o allowlist precisa conter os
+nomes do atributo.
+
+`syncDirectory` devolve `usersFromAttribute` / `usersFromGroups` — é o
+diagnóstico de "o atributo está mapeado no Authentik?" sem precisar de curl.
+
 ### Filtros do sync
 
 Três variáveis, listas separadas por vírgula, `*` como curinga, comparação sem
