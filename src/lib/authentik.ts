@@ -61,8 +61,13 @@ async function fetchPages<T>(
     })
 
     if (!response.ok) {
+      // O Authentik responde 403 tanto para token inválido quanto para falta de
+      // permissão; o corpo é o que distingue os dois casos.
+      const detail = await response.text().catch(() => '')
       throw new Error(
-        `Authentik API ${path} responded with ${response.status} ${response.statusText}`,
+        `Authentik API ${path} respondeu ${response.status} ${response.statusText}${
+          detail ? `: ${detail.slice(0, 300)}` : ''
+        }`,
       )
     }
 
