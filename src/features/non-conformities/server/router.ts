@@ -7,6 +7,7 @@ import {
   protectedProcedure,
 } from '@/lib/trpc/init'
 import { prisma } from '@/lib/prisma'
+import { deleteObject } from '@/lib/storage'
 import { parseDateInput } from '@/utils/date'
 import {
   recordFiltersSchema,
@@ -493,6 +494,9 @@ export const nonConformitiesRouter = createTRPCRouter({
         throw new TRPCError({ code: 'FORBIDDEN' })
       }
       await prisma.attachment.delete({ where: { id: attachment.id } })
+      await deleteObject(attachment.objectKey).catch((error: unknown) => {
+        console.error('Failed to remove attachment object', error)
+      })
       return { recordId: attachment.record.id }
     }),
 })

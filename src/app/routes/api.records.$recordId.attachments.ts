@@ -3,6 +3,11 @@ import { createFileRoute } from '@tanstack/react-router'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { env } from '@/config/env'
+import {
+  attachmentObjectKey,
+  deleteObject,
+  putObject,
+} from '@/lib/storage'
 import { attachmentSections } from '@/features/non-conformities/schemas'
 
 import type { AttachmentSection } from '@/features/non-conformities/schemas'
@@ -86,20 +91,32 @@ export const Route = createFileRoute('/api/records/$recordId/attachments')({
           return new Response('Tipo de arquivo não permitido', { status: 415 })
         }
 
-        const attachment = await prisma.attachment.create({
-          data: {
-            nonConformityId: record.id,
-            section: section as AttachmentSection,
-            fileName: file.name,
-            mimeType: file.type,
-            size: file.size,
-            content: Buffer.from(await file.arrayBuffer()),
-            uploadedById: user.id,
-          },
-          select: { id: true },
-        })
+        const objectKey = attachmentObjectKey(record.id, file.name)
+        await putObject(
+          objectKey,
+          Buffer.from(await file.arrayBuffer()),
+          file.type,
+        )
 
-        return Response.json(attachment, { status: 201 })
+        try {
+          const attachment = await prisma.attachment.create({
+            data: {
+              nonConformityId: record.id,
+              section: section as AttachmentSection,
+              fileName: file.name,
+              mimeType: file.type,
+              size: file.size,
+              objectKey,
+              uploadedById: user.id,
+            },
+            select: { id: true },
+          })
+
+          return Response.json(attachment, { status: 201 })
+        } catch (error) {
+          await deleteObject(objectKey).catch(() => undefined)
+          throw error
+        }
       },
     },
   },

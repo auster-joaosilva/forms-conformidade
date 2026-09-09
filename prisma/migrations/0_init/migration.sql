@@ -164,7 +164,7 @@ CREATE TABLE "Attachment" (
     "fileName" TEXT NOT NULL,
     "mimeType" TEXT NOT NULL,
     "size" INTEGER NOT NULL,
-    "content" BYTEA NOT NULL,
+    "objectKey" TEXT NOT NULL,
     "uploadedById" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -209,6 +209,9 @@ CREATE INDEX "Action_nonConformityId_idx" ON "Action"("nonConformityId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Acknowledgement_nonConformityId_userId_key" ON "Acknowledgement"("nonConformityId", "userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Attachment_objectKey_key" ON "Attachment"("objectKey");
 
 -- CreateIndex
 CREATE INDEX "Attachment_nonConformityId_idx" ON "Attachment"("nonConformityId");

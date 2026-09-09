@@ -135,7 +135,16 @@ a partir da aba *Domains* — não as adicione no compose.
 
 ## Anexos
 
-Os anexos ficam no próprio Postgres (`Attachment.content`), sem dependência de
-S3/MinIO. Tipos aceitos: PDF, PNG, JPEG, WebP, TXT, CSV, DOC(X) e XLS(X), até
-`MAX_UPLOAD_BYTES` (10 MB por padrão). Se o volume crescer, mover para o MinIO
-existente (`s3.auster.local`) é a próxima evolução.
+Os arquivos ficam no MinIO existente; o Postgres guarda só os metadados
+(`Attachment.objectKey`, nome, tipo, tamanho, seção e quem enviou). O bucket é
+criado na primeira subida, e a chave do objeto é
+`records/<recordId>/<uuid>-<arquivo>`.
+
+Dentro do `dokploy-network` o app fala com o container `minio` na porta 9000 em
+HTTP (`S3_ENDPOINT=minio`, `S3_USE_SSL=false`); de fora, use
+`s3.auster.local` na 443 com `S3_USE_SSL=true`.
+
+O download passa pela aplicação (`GET /api/attachments/<id>`), que valida a
+permissão e faz stream do objeto — não são geradas URLs públicas ou pré-assinadas.
+Tipos aceitos: PDF, PNG, JPEG, WebP, TXT, CSV, DOC(X) e XLS(X), até
+`MAX_UPLOAD_BYTES` (10 MB por padrão).

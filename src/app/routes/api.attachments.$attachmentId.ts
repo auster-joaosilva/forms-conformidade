@@ -1,7 +1,9 @@
+import { Readable } from 'node:stream'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { getObjectStream } from '@/lib/storage'
 
 export const Route = createFileRoute('/api/attachments/$attachmentId')({
   server: {
@@ -50,14 +52,25 @@ export const Route = createFileRoute('/api/attachments/$attachmentId')({
 
         if (!canRead) return new Response('Sem permissão', { status: 403 })
 
-        return new Response(new Uint8Array(attachment.content), {
-          headers: {
-            'Content-Type': attachment.mimeType,
-            'Content-Length': String(attachment.size),
-            'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(attachment.fileName)}`,
-            'Cache-Control': 'private, no-store',
+        let objectStream
+        try {
+          objectStream = await getObjectStream(attachment.objectKey)
+        } catch (error) {
+          console.error('Attachment object missing in MinIO', error)
+          return new Response('Arquivo indisponível no storage', { status: 502 })
+        }
+
+        return new Response(
+          Readable.toWeb(objectStream) as ReadableStream<Uint8Array>,
+          {
+            headers: {
+              'Content-Type': attachment.mimeType,
+              'Content-Length': String(attachment.size),
+              'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(attachment.fileName)}`,
+              'Cache-Control': 'private, no-store',
+            },
           },
-        })
+        )
       },
     },
   },

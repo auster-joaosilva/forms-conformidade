@@ -13,6 +13,15 @@ const schema = z.object({
   MASTER_USER_PASSWORD: z.string().optional(),
   MASTER_USER_NAME: z.string().default('Administrador'),
   MAX_UPLOAD_BYTES: z.coerce.number().int().positive().default(10_485_760),
+  S3_ENDPOINT: z.string().min(1).default('minio'),
+  S3_PORT: z.coerce.number().int().positive().default(9000),
+  S3_USE_SSL: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
+  S3_ACCESS_KEY: z.string().min(1),
+  S3_SECRET_KEY: z.string().min(1),
+  S3_BUCKET: z.string().min(1).default('forms-conformidade'),
 })
 
 const parsed = schema.safeParse(process.env)

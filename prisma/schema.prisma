@@ -219,7 +219,7 @@ model Attachment {
   fileName        String
   mimeType        String
   size            Int
-  content         Bytes
+  objectKey       String            @unique
   uploadedById    String
   createdAt       DateTime          @default(now())
 
