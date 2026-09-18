@@ -123,6 +123,8 @@ function scalarPayload(values: RecordFormValues, user: SessionUser) {
     problemDescription: values.problemDescription,
     problemDate: parseDateInput(values.problemDate),
     origin: values.origin,
+    clientName: values.clientName || null,
+    errorResponsibleName: values.errorResponsibleName || null,
     containmentAction: values.containmentAction || null,
     rootCauseAnalysis: values.rootCauseAnalysis || null,
   }

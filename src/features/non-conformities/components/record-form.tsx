@@ -176,6 +176,30 @@ export function RecordForm({
             </datalist>
           </Field>
         </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Field
+            label="Nome do cliente"
+            htmlFor="clientName"
+            error={errors.clientName?.message}
+          >
+            <Input
+              id="clientName"
+              disabled={disabled}
+              {...form.register('clientName')}
+            />
+          </Field>
+          <Field
+            label="Responsável pelo erro"
+            htmlFor="errorResponsibleName"
+            error={errors.errorResponsibleName?.message}
+          >
+            <Input
+              id="errorResponsibleName"
+              disabled={disabled}
+              {...form.register('errorResponsibleName')}
+            />
+          </Field>
+        </div>
       </FormSection>
 
       <FormSection

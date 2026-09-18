@@ -19,6 +19,8 @@ export function toFormValues(record: RecordDetail): RecordFormValues {
     problemDescription: record.problemDescription,
     problemDate: toDate(record.problemDate),
     origin: record.origin,
+    clientName: record.clientName ?? '',
+    errorResponsibleName: record.errorResponsibleName ?? '',
     containmentAction: record.containmentAction ?? '',
     rootCauseAnalysis: record.rootCauseAnalysis ?? '',
     verificationMethod: record.verificationMethod ?? '',

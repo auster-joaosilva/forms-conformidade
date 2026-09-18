@@ -78,6 +78,16 @@ export function RecordSheet({ record }: { record: RecordDetail }) {
           <span className="font-semibold">Origem:</span> {record.origin}
         </div>
       </div>
+      <div className="grid grid-cols-2 divide-x divide-black/60 border-t border-black/60 text-[11px]">
+        <div className="px-2 py-1">
+          <span className="font-semibold">Nome do cliente:</span>{' '}
+          {record.clientName}
+        </div>
+        <div className="px-2 py-1">
+          <span className="font-semibold">Responsável pelo erro:</span>{' '}
+          {record.errorResponsibleName}
+        </div>
+      </div>
 
       <SectionTitle>
         2. Pré-análise da causa e ação de contenção (ação de contenção)

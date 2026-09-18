@@ -142,9 +142,11 @@ model NonConformity {
 
   departmentId String
 
-  problemDescription String
-  problemDate        DateTime
-  origin             String
+  problemDescription   String
+  problemDate          DateTime
+  origin               String
+  clientName           String?
+  errorResponsibleName String?
 
   containmentAction String?
   rootCauseAnalysis String?
