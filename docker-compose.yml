@@ -30,7 +30,11 @@ services:
       - S3_BUCKET=${S3_BUCKET:-forms-conformidade}
       - BOOTSTRAP_ON_START=${BOOTSTRAP_ON_START:-true}
       - TZ=${TZ:-America/Sao_Paulo}
-      - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED:-0}
+      # Authentik usa CA interna do AD CS; o bundle montado abaixo é o que faz
+      # o Node confiar no certificado durante o discovery OIDC.
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/certs/auster-ca.pem
+    volumes:
+      - /docker/_pki/ca-bundle-auster.pem:/etc/ssl/certs/auster-ca.pem:ro
     dns:
       - ${INTERNAL_DNS:-10.10.30.242}
     networks:

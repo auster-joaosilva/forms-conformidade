@@ -278,7 +278,7 @@ compose/env para o time aplicar.
 | MinIO | container `minio`, API 9000, console 9001, rede `dokploy-network`; externo em `s3.auster.local` / `minio.auster.local` |
 | Domínios | `*.auster.local` via Traefik, HTTPS com certificado interno |
 | DNS interno | `10.10.30.242` (necessário no container para resolver `*.auster.local`) |
-| TLS interno | self-signed → `NODE_TLS_REJECT_UNAUTHORIZED=0` |
+| TLS interno | CA do AD CS → monte `/docker/_pki/ca-bundle-auster.pem` e aponte `NODE_EXTRA_CA_CERTS` |
 
 Convenção dos serviços Node do time: build local via `Dockerfile`, redes
 `shared-postgres` + `dokploy-network` + `default`, `dns` interno, e env no

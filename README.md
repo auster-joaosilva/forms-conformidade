@@ -132,8 +132,9 @@ apagado — desative pela tela de Usuários.
 
 O `docker-compose.yml` segue o padrão dos outros serviços (`crm.auster.local`,
 `meet.auster.local`): build local, redes externas `shared-postgres` e
-`dokploy-network`, DNS interno e `NODE_TLS_REJECT_UNAUTHORIZED=0` para os
-certificados internos. As labels do Traefik são geradas pelo próprio Dokploy
+`dokploy-network`, DNS interno e a CA do AD CS montada em
+`/etc/ssl/certs/auster-ca.pem` com `NODE_EXTRA_CA_CERTS` apontando para ela.
+As labels do Traefik são geradas pelo próprio Dokploy
 a partir da aba *Domains* — não as adicione no compose.
 
 1. No Postgres compartilhado (`DB Compartilhado > postgres`), crie o banco e o usuário:
