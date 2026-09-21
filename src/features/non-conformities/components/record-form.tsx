@@ -200,6 +200,53 @@ export function RecordForm({
             />
           </Field>
         </div>
+        <div className="flex items-center gap-2">
+          <Controller
+            control={form.control}
+            name="hasFinancialImpact"
+            render={({ field }) => (
+              <Checkbox
+                id="hasFinancialImpact"
+                checked={field.value}
+                disabled={disabled}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+              />
+            )}
+          />
+          <Label htmlFor="hasFinancialImpact" className="font-normal">
+            Gerou ônus financeiro?
+          </Label>
+        </div>
+        {form.watch('hasFinancialImpact') && (
+          <div className="grid gap-6 md:grid-cols-2">
+            <Field
+              label="Para quem"
+              htmlFor="financialImpactTarget"
+              error={errors.financialImpactTarget?.message}
+            >
+              <Input
+                id="financialImpactTarget"
+                disabled={disabled}
+                {...form.register('financialImpactTarget')}
+              />
+            </Field>
+            <Field
+              label="Valor (R$)"
+              htmlFor="financialImpactAmount"
+              error={errors.financialImpactAmount?.message}
+            >
+              <Input
+                id="financialImpactAmount"
+                type="number"
+                step="0.01"
+                min="0"
+                inputMode="decimal"
+                disabled={disabled}
+                {...form.register('financialImpactAmount')}
+              />
+            </Field>
+          </div>
+        )}
       </FormSection>
 
       <FormSection

@@ -148,6 +148,14 @@ model NonConformity {
   clientName           String?
   errorResponsibleName String?
 
+  hasFinancialImpact    Boolean @default(false)
+  financialImpactTarget String?
+  // ponytail: valor guardado como Float (sem precisão decimal exata) porque o
+  // superjson deste projeto não tem transformer para Prisma.Decimal. Se algum
+  // dia isso virar conciliação financeira de verdade, troque para Decimal e
+  // registre um transformer custom no `t` de src/lib/trpc/init.ts.
+  financialImpactAmount Float?
+
   containmentAction String?
   rootCauseAnalysis String?
 

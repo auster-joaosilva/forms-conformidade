@@ -82,26 +82,47 @@ export const acknowledgementSchema = z.object({
   position: z.string().min(1, 'Informe o cargo'),
 })
 
-export const recordFormSchema = z.object({
-  type: z.enum(recordTypes),
-  departmentId: z.string().min(1, 'Selecione o departamento'),
-  problemDescription: z.string().min(1, 'Descreva o problema'),
-  problemDate: requiredDate,
-  origin: z.string().min(1, 'Informe a origem'),
-  clientName: z.string(),
-  errorResponsibleName: z.string(),
-  containmentAction: z.string(),
-  rootCauseAnalysis: z.string(),
-  verificationMethod: z.union([z.enum(verificationMethods), z.literal('')]),
-  verificationMethodDetail: z.string(),
-  effectivenessResult: z.string(),
-  effectivenessDate: optionalDate,
-  effectivenessVerifiedById: z.string(),
-  technicalManagerId: z.string(),
-  generalManagerId: z.string(),
-  actions: z.array(actionSchema),
-  acknowledgements: z.array(acknowledgementSchema),
-})
+export const recordFormSchema = z
+  .object({
+    type: z.enum(recordTypes),
+    departmentId: z.string().min(1, 'Selecione o departamento'),
+    problemDescription: z.string().min(1, 'Descreva o problema'),
+    problemDate: requiredDate,
+    origin: z.string().min(1, 'Informe a origem'),
+    clientName: z.string(),
+    errorResponsibleName: z.string(),
+    hasFinancialImpact: z.boolean(),
+    financialImpactTarget: z.string(),
+    financialImpactAmount: z.string(),
+    containmentAction: z.string(),
+    rootCauseAnalysis: z.string(),
+    verificationMethod: z.union([z.enum(verificationMethods), z.literal('')]),
+    verificationMethodDetail: z.string(),
+    effectivenessResult: z.string(),
+    effectivenessDate: optionalDate,
+    effectivenessVerifiedById: z.string(),
+    technicalManagerId: z.string(),
+    generalManagerId: z.string(),
+    actions: z.array(actionSchema),
+    acknowledgements: z.array(acknowledgementSchema),
+  })
+  .superRefine((values, ctx) => {
+    if (!values.hasFinancialImpact) return
+    if (values.financialImpactTarget.trim() === '') {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['financialImpactTarget'],
+        message: 'Informe para quem foi o ônus financeiro',
+      })
+    }
+    if (!/^\d+(\.\d{1,2})?$/.test(values.financialImpactAmount)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['financialImpactAmount'],
+        message: 'Informe um valor válido',
+      })
+    }
+  })
 
 export type RecordFormValues = z.infer<typeof recordFormSchema>
 
@@ -122,6 +143,9 @@ export const emptyRecordForm: RecordFormValues = {
   origin: '',
   clientName: '',
   errorResponsibleName: '',
+  hasFinancialImpact: false,
+  financialImpactTarget: '',
+  financialImpactAmount: '',
   containmentAction: '',
   rootCauseAnalysis: '',
   verificationMethod: '',

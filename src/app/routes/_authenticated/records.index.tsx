@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, ListChecks, Plus, Search } from 'lucide-react'
+import { AlertTriangle, Download, ListChecks, Plus, Search } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -49,6 +49,16 @@ export const Route = createFileRoute('/_authenticated/records/')({
 })
 
 const ALL = '__all__'
+
+function buildExportUrl(filters: RecordFilters) {
+  const params = new URLSearchParams()
+  if (filters.status) params.set('status', filters.status)
+  if (filters.type) params.set('type', filters.type)
+  if (filters.departmentId) params.set('departmentId', filters.departmentId)
+  if (filters.search) params.set('search', filters.search)
+  const query = params.toString()
+  return `/api/records/export${query ? `?${query}` : ''}`
+}
 
 function RecordsPage() {
   const trpc = useTRPC()
@@ -113,7 +123,7 @@ function RecordsPage() {
 
       <Card>
         <CardHeader className="gap-4">
-          <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto]">
+          <div className="grid gap-3 md:grid-cols-[1fr_auto_auto_auto_auto]">
             <div className="relative">
               <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
               <Input
@@ -191,6 +201,13 @@ function RecordsPage() {
                 ))}
               </SelectContent>
             </Select>
+
+            <Button variant="outline" asChild>
+              <a href={buildExportUrl(filters)}>
+                <Download className="size-4" />
+                Exportar CSV
+              </a>
+            </Button>
           </div>
         </CardHeader>
 

@@ -17,6 +17,7 @@ import {
 
 import type { SessionUser } from '@/lib/trpc/init'
 import type {
+  RecordFilters,
   RecordFormValues,
   RecordStatus,
 } from '@/features/non-conformities/schemas'
@@ -58,7 +59,9 @@ const allowedTransitions: Record<RecordStatus, Array<RecordStatus>> = {
   CANCELLED: [],
 }
 
-function visibilityWhere(user: SessionUser) {
+function visibilityWhere(
+  user: Pick<SessionUser, 'id' | 'role' | 'departmentIds'>,
+) {
   if (user.role === 'ADMIN') return {}
   return {
     OR: [
@@ -66,6 +69,44 @@ function visibilityWhere(user: SessionUser) {
       { createdById: user.id },
       { actions: { some: { assigneeId: user.id } } },
       { acknowledgements: { some: { userId: user.id } } },
+    ],
+  }
+}
+
+export function recordListWhere(
+  user: Pick<SessionUser, 'id' | 'role' | 'departmentIds'>,
+  filters: Partial<RecordFilters>,
+) {
+  return {
+    AND: [
+      visibilityWhere(user),
+      filters.status ? { status: filters.status } : {},
+      filters.type ? { type: filters.type } : {},
+      filters.departmentId ? { departmentId: filters.departmentId } : {},
+      filters.search
+        ? {
+            OR: [
+              {
+                number: {
+                  contains: filters.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                problemDescription: {
+                  contains: filters.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+              {
+                origin: {
+                  contains: filters.search,
+                  mode: 'insensitive' as const,
+                },
+              },
+            ],
+          }
+        : {},
     ],
   }
 }
@@ -125,6 +166,13 @@ function scalarPayload(values: RecordFormValues, user: SessionUser) {
     origin: values.origin,
     clientName: values.clientName || null,
     errorResponsibleName: values.errorResponsibleName || null,
+    hasFinancialImpact: values.hasFinancialImpact,
+    financialImpactTarget: values.hasFinancialImpact
+      ? values.financialImpactTarget || null
+      : null,
+    financialImpactAmount: values.hasFinancialImpact
+      ? Number(values.financialImpactAmount)
+      : null,
     containmentAction: values.containmentAction || null,
     rootCauseAnalysis: values.rootCauseAnalysis || null,
   }
@@ -218,38 +266,7 @@ export const nonConformitiesRouter = createTRPCRouter({
     .input(recordFiltersSchema.partial())
     .query(({ ctx, input }) =>
       prisma.nonConformity.findMany({
-        where: {
-          AND: [
-            visibilityWhere(ctx.user),
-            input.status ? { status: input.status } : {},
-            input.type ? { type: input.type } : {},
-            input.departmentId ? { departmentId: input.departmentId } : {},
-            input.search
-              ? {
-                  OR: [
-                    {
-                      number: {
-                        contains: input.search,
-                        mode: 'insensitive' as const,
-                      },
-                    },
-                    {
-                      problemDescription: {
-                        contains: input.search,
-                        mode: 'insensitive' as const,
-                      },
-                    },
-                    {
-                      origin: {
-                        contains: input.search,
-                        mode: 'insensitive' as const,
-                      },
-                    },
-                  ],
-                }
-              : {},
-          ],
-        },
+        where: recordListWhere(ctx.user, input),
         orderBy: [{ year: 'desc' as const }, { sequence: 'desc' as const }],
         include: {
           department: { select: { id: true, name: true } },

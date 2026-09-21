@@ -21,6 +21,12 @@ export function toFormValues(record: RecordDetail): RecordFormValues {
     origin: record.origin,
     clientName: record.clientName ?? '',
     errorResponsibleName: record.errorResponsibleName ?? '',
+    hasFinancialImpact: record.hasFinancialImpact,
+    financialImpactTarget: record.financialImpactTarget ?? '',
+    financialImpactAmount:
+      record.financialImpactAmount != null
+        ? String(record.financialImpactAmount)
+        : '',
     containmentAction: record.containmentAction ?? '',
     rootCauseAnalysis: record.rootCauseAnalysis ?? '',
     verificationMethod: record.verificationMethod ?? '',

@@ -1,4 +1,5 @@
 import { formatDate, formatDateTime } from '@/utils/date'
+import { formatCurrency } from '@/utils/currency'
 import {
   recordStatusLabels,
   recordTypeLabels,
@@ -86,6 +87,20 @@ export function RecordSheet({ record }: { record: RecordDetail }) {
         <div className="px-2 py-1">
           <span className="font-semibold">Responsável pelo erro:</span>{' '}
           {record.errorResponsibleName}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 divide-x divide-black/60 border-t border-black/60 text-[11px]">
+        <div className="px-2 py-1">
+          <span className="font-semibold">Gerou ônus financeiro?</span>{' '}
+          {record.hasFinancialImpact ? 'Sim' : 'Não'}
+        </div>
+        <div className="px-2 py-1">
+          <span className="font-semibold">Para quem:</span>{' '}
+          {record.financialImpactTarget}
+        </div>
+        <div className="px-2 py-1">
+          <span className="font-semibold">Valor:</span>{' '}
+          {formatCurrency(record.financialImpactAmount)}
         </div>
       </div>
 
