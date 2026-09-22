@@ -333,7 +333,7 @@ export const nonConformitiesRouter = createTRPCRouter({
               year,
               sequence,
               number,
-              status: 'DRAFT',
+              status: 'OPEN',
               createdById: ctx.user.id,
             },
             select: { id: true },

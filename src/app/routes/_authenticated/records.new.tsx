@@ -23,7 +23,7 @@ function NewRecordPage() {
   const createRecord = useMutation(
     trpc.records.create.mutationOptions({
       onSuccess: (record) => {
-        toast.success('Registro criado como rascunho')
+        toast.success('Registro criado')
         void navigate({ to: paths.record(record.id) })
       },
       onError: (error) => toast.error(error.message),
